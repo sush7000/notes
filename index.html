@@ -3,141 +3,98 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🖊️ Important Note</title>
+  <title>Important Note</title>
   <style>
-    body {
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: #f2f8f6;
       font-family: Arial, sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      min-height: 100vh;
-      background: #f6f9f9;
-      margin: 0;
+      justify-content: center;
       padding: 20px;
-    }
-    h1 {
-      margin-top: 40px;
     }
     textarea {
       width: 90%;
-      max-width: 600px;
       height: 200px;
       padding: 10px;
-      font-size: 18px;
-      border-radius: 10px;
+      font-size: 20px;
       border: 2px solid #333;
-      margin-bottom: 10px;
+      border-radius: 10px;
       resize: none;
-    }
-    .buttons {
-      display: flex;
-      gap: 10px;
-      margin: 10px 0;
+      outline: none;
     }
     button {
-      padding: 10px 20px;
-      font-size: 16px;
+      margin-top: 20px;
+      padding: 10px 30px;
+      background: #2196F3;
+      color: #fff;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
+      font-size: 18px;
       cursor: pointer;
     }
-    #editBtn {
-      position: absolute;
-      top: 15px;
-      left: 15px;
-      background: #4caf50;
-      color: white;
-    }
-    #copyBtn {
-      background: #2196F3;
-      color: white;
-    }
-    #saveBtn {
-      background: #f44336;
-      color: white;
-      display: none;
-    }
-    #message, #timestamp {
-      margin-top: 10px;
-      font-size: 14px;
+    #timestamp {
+      margin-top: 15px;
       color: green;
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
 
-<button id="editBtn">Edit</button>
-<h1>🔥 Important Note</h1>
-<textarea id="note" readonly></textarea>
+  <textarea id="note" readonly>Loading...</textarea>
+  <button id="copyButton">Copy</button>
+  <div id="timestamp"></div>
 
-<div class="buttons">
-  <button id="copyBtn">Copy</button>
-  <button id="saveBtn">Save</button>
-</div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js";
 
-<div id="message"></div>
-<div id="timestamp"></div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDz-SNVEJI-grCYJcpaHQ4aIDIwIWaeBt8",
+      authDomain: "mynotes-24988.firebaseapp.com",
+      databaseURL: "https://mynotes-24988-default-rtdb.firebaseio.com",
+      projectId: "mynotes-24988",
+      storageBucket: "mynotes-24988.appspot.com",
+      messagingSenderId: "599177137893",
+      appId: "1:599177137893:web:8eac4ceb0869ebcca4ce0c"
+    };
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyDz-SNVEJI-grCYJcpaHQ4aIDIwIWaeBt8",
-    authDomain: "mynotes-24988.firebaseapp.com",
-    databaseURL: "https://mynotes-24988-default-rtdb.firebaseio.com",
-    projectId: "mynotes-24988",
-    storageBucket: "mynotes-24988.appspot.com",
-    messagingSenderId: "599177137893",
-    appId: "1:599177137893:web:8eac4ceb0869ebcca4ce0c"
-  };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const noteRef = ref(db, 'note');
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const noteRef = db.ref("note");
+    const note = document.getElementById('note');
+    const copyButton = document.getElementById('copyButton');
+    const timestamp = document.getElementById('timestamp');
 
-  const note = document.getElementById("note");
-  const editBtn = document.getElementById("editBtn");
-  const saveBtn = document.getElementById("saveBtn");
-  const copyBtn = document.getElementById("copyBtn");
-  const message = document.getElementById("message");
-  const timestamp = document.getElementById("timestamp");
+    function updateTimestamp(time) {
+      const date = new Date(time);
+      const formatted = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth()+1).toString().padStart(2, '0')}/${date.getFullYear()}, ${date.toLocaleTimeString()}`;
+      timestamp.innerText = `Last Updated: ${formatted}`;
+    }
 
-  // Load note on page load
-  noteRef.on("value", snapshot => {
-    note.value = snapshot.val()?.text || "";
-    timestamp.innerText = snapshot.val()?.updatedAt ? `Last Updated: ${snapshot.val().updatedAt}` : "";
-  });
-
-  editBtn.onclick = () => {
-    note.removeAttribute("readonly");
-    saveBtn.style.display = "inline-block";
-    editBtn.style.display = "none";
-  };
-
-  saveBtn.onclick = () => {
-    const now = new Date();
-    const formatted = now.toLocaleString('en-GB', { hour12: true });
-
-    noteRef.set({
-      text: note.value,
-      updatedAt: formatted
-    }).then(() => {
-      note.setAttribute("readonly", true);
-      saveBtn.style.display = "none";
-      editBtn.style.display = "inline-block";
-      message.innerText = "✔️ Saved successfully!";
-      setTimeout(() => message.innerText = "", 3000);
+    onValue(noteRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        note.value = data.text || '';
+        updateTimestamp(data.updatedAt || Date.now());
+      }
     });
-  };
 
-  copyBtn.onclick = () => {
-    navigator.clipboard.writeText(note.value);
-    message.innerText = "🔗 Copied to clipboard!";
-    setTimeout(() => message.innerText = "", 3000);
-  };
-</script>
-
+    copyButton.addEventListener('click', () => {
+      note.select();
+      document.execCommand('copy');
+      alert('Copied to clipboard!');
+    });
+  </script>
 </body>
 </html>
