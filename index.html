@@ -5,19 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🖊️ Important Note</title>
   <style>
-    body {
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
       font-family: Arial, sans-serif;
+      background: #f6f9f9;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: flex-start;
-      min-height: 100vh;
-      background: #f6f9f9;
-      margin: 0;
-      padding: 20px;
     }
     h1 {
       margin-top: 40px;
+      font-size: 24px;
     }
     textarea {
       width: 90%;
@@ -27,8 +29,8 @@
       font-size: 18px;
       border-radius: 10px;
       border: 2px solid #333;
-      margin-bottom: 10px;
       resize: none;
+      margin-top: 10px;
     }
     .buttons {
       display: flex;
@@ -58,10 +60,15 @@
       color: white;
       display: none;
     }
-    #message, #timestamp {
-      margin-top: 10px;
+    #message {
       font-size: 14px;
       color: green;
+      margin-top: 5px;
+    }
+    #timestamp {
+      font-size: 14px;
+      color: green;
+      margin-top: 5px;
     }
   </style>
 </head>
@@ -104,7 +111,7 @@
   const message = document.getElementById("message");
   const timestamp = document.getElementById("timestamp");
 
-  // Load note on page load
+  // Load note
   noteRef.on("value", snapshot => {
     note.value = snapshot.val()?.text || "";
     timestamp.innerText = snapshot.val()?.updatedAt ? `Last Updated: ${snapshot.val().updatedAt}` : "";
@@ -118,7 +125,7 @@
 
   saveBtn.onclick = () => {
     const now = new Date();
-    const formatted = now.toLocaleString('en-GB', { hour12: true });
+    const formatted = now.toLocaleString('en-GB', { hour12: false });
 
     noteRef.set({
       text: note.value,
