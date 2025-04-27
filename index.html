@@ -17,10 +17,19 @@
       padding: 20px;
       text-align: center;
     }
+    .top-buttons {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
     h1 {
       font-size: 28px;
       color: #333;
       margin-bottom: 20px;
+      margin-top: 80px;
     }
     textarea {
       width: 90%;
@@ -35,8 +44,8 @@
       background-color: #fff;
     }
     button {
-      padding: 16px 30px;
-      font-size: 20px;
+      padding: 14px 28px;
+      font-size: 18px;
       background-color: #4CAF50;
       color: white;
       border: none;
@@ -51,15 +60,34 @@
 </head>
 <body>
 
+<div class="top-buttons">
+  <button onclick="editNote()">✏️ Edit Note</button>
+  <button id="saveButton" onclick="saveNote()" style="display:none;">💾 Save Note</button>
+</div>
+
 <h1>🔥 Important Note 🔥</h1>
 <textarea id="note" readonly>🔥 Download link: https://sush7000.github.io/viralvideoslinks/</textarea>
 <button onclick="copyText()">📋 Copy Link</button>
 
 <script>
+function editNote() {
+  var note = document.getElementById("note");
+  note.removeAttribute("readonly");
+  note.focus();
+  document.getElementById("saveButton").style.display = "block";
+}
+
+function saveNote() {
+  var note = document.getElementById("note");
+  note.setAttribute("readonly", true);
+  document.getElementById("saveButton").style.display = "none";
+  alert("Note saved successfully!");
+}
+
 function copyText() {
   var copyText = document.getElementById("note");
   copyText.select();
-  copyText.setSelectionRange(0, 99999); /* For mobile devices */
+  copyText.setSelectionRange(0, 99999);
   document.execCommand("copy");
   alert("Copied to Clipboard!");
 }
