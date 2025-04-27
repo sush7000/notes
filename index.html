@@ -4,94 +4,103 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Important Note</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <style>
     body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      min-height: 100vh;
-      background-color: #f2f2f2;
       font-family: Arial, sans-serif;
+      background: #f7f7f7;
       margin: 0;
       padding: 20px;
       text-align: center;
     }
-    .top-buttons {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    h1 {
-      font-size: 28px;
-      color: #333;
-      margin-bottom: 20px;
-      margin-top: 80px;
-    }
-    textarea {
+    #note {
       width: 90%;
-      max-width: 500px;
-      height: 150px;
+      max-width: 600px;
+      min-height: 200px;
+      margin: 20px auto;
       padding: 15px;
-      font-size: 18px;
-      border: 2px solid #4CAF50;
+      background: #fff;
       border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 18px;
       resize: none;
-      margin-bottom: 20px;
-      background-color: #fff;
+    }
+    .buttons {
+      margin-top: 10px;
     }
     button {
-      padding: 14px 28px;
-      font-size: 18px;
-      background-color: #4CAF50;
-      color: white;
+      padding: 10px 20px;
+      margin: 5px;
       border: none;
-      border-radius: 8px;
+      border-radius: 5px;
+      font-size: 16px;
       cursor: pointer;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
-    button:hover {
-      background-color: #45a049;
-    }
+    #editBtn { background-color: #3498db; color: white; }
+    #saveBtn { background-color: #2ecc71; color: white; }
   </style>
 </head>
 <body>
 
-<div class="top-buttons">
-  <button onclick="editNote()">✏️ Edit Note</button>
-  <button id="saveButton" onclick="saveNote()" style="display:none;">💾 Save Note</button>
-</div>
+  <h2>🖊️ Important Note</h2>
 
-<h1>🔥 Important Note 🔥</h1>
-<textarea id="note" readonly>🔥 Download link: https://sush7000.github.io/viralvideoslinks/</textarea>
-<button onclick="copyText()">📋 Copy Link</button>
+  <textarea id="note" readonly></textarea>
 
-<script>
-function editNote() {
-  var note = document.getElementById("note");
-  note.removeAttribute("readonly");
-  note.focus();
-  document.getElementById("saveButton").style.display = "block";
-}
+  <div class="buttons">
+    <button id="editBtn">Edit</button>
+    <button id="saveBtn" style="display:none;">Save</button>
+  </div>
 
-function saveNote() {
-  var note = document.getElementById("note");
-  note.setAttribute("readonly", true);
-  document.getElementById("saveButton").style.display = "none";
-  alert("Note saved successfully!");
-}
+  <script>
+    // Your Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyDz-SNVEJI-grCYJcpaHQ4aIDIwIWaeBt8",
+      authDomain: "mynotes-24988.firebaseapp.com",
+      databaseURL: "https://mynotes-24988-default-rtdb.firebaseio.com",
+      projectId: "mynotes-24988",
+      storageBucket: "mynotes-24988.appspot.com",
+      messagingSenderId: "599177137893",
+      appId: "1:599177137893:web:8eac4ceb0869ebcca4ce0c"
+    };
 
-function copyText() {
-  var copyText = document.getElementById("note");
-  copyText.select();
-  copyText.setSelectionRange(0, 99999);
-  document.execCommand("copy");
-  alert("Copied to Clipboard!");
-}
-</script>
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const noteEl = document.getElementById('note');
+    const editBtn = document.getElementById('editBtn');
+    const saveBtn = document.getElementById('saveBtn');
+
+    // Fetch note initially
+    function fetchNote() {
+      db.ref('note').once('value').then(snapshot => {
+        noteEl.value = snapshot.val() || "";
+      });
+    }
+
+    fetchNote();
+
+    // Edit button
+    editBtn.onclick = () => {
+      noteEl.removeAttribute('readonly');
+      editBtn.style.display = 'none';
+      saveBtn.style.display = 'inline-block';
+    };
+
+    // Save button
+    saveBtn.onclick = () => {
+      const updatedNote = noteEl.value.trim();
+      db.ref('note').set(updatedNote).then(() => {
+        alert('Note updated successfully!');
+        noteEl.setAttribute('readonly', true);
+        editBtn.style.display = 'inline-block';
+        saveBtn.style.display = 'none';
+      }).catch(err => {
+        alert('Error saving note: ' + err);
+      });
+    };
+  </script>
 
 </body>
 </html>
