@@ -3,104 +3,141 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Important Note</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <title>🖊️ Important Note</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f7f7f7;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      background: #f6f9f9;
       margin: 0;
       padding: 20px;
-      text-align: center;
     }
-    #note {
+    h1 {
+      margin-top: 40px;
+    }
+    textarea {
       width: 90%;
       max-width: 600px;
-      min-height: 200px;
-      margin: 20px auto;
-      padding: 15px;
-      background: #fff;
-      border-radius: 10px;
-      border: 1px solid #ccc;
+      height: 200px;
+      padding: 10px;
       font-size: 18px;
+      border-radius: 10px;
+      border: 2px solid #333;
+      margin-bottom: 10px;
       resize: none;
     }
     .buttons {
-      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      margin: 10px 0;
     }
     button {
       padding: 10px 20px;
-      margin: 5px;
+      font-size: 16px;
       border: none;
       border-radius: 5px;
-      font-size: 16px;
       cursor: pointer;
     }
-    #editBtn { background-color: #3498db; color: white; }
-    #saveBtn { background-color: #2ecc71; color: white; }
+    #editBtn {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: #4caf50;
+      color: white;
+    }
+    #copyBtn {
+      background: #2196F3;
+      color: white;
+    }
+    #saveBtn {
+      background: #f44336;
+      color: white;
+      display: none;
+    }
+    #message, #timestamp {
+      margin-top: 10px;
+      font-size: 14px;
+      color: green;
+    }
   </style>
 </head>
 <body>
 
-  <h2>🖊️ Important Note</h2>
+<button id="editBtn">Edit</button>
+<h1>🔥 Important Note</h1>
+<textarea id="note" readonly></textarea>
 
-  <textarea id="note" readonly></textarea>
+<div class="buttons">
+  <button id="copyBtn">Copy</button>
+  <button id="saveBtn">Save</button>
+</div>
 
-  <div class="buttons">
-    <button id="editBtn">Edit</button>
-    <button id="saveBtn" style="display:none;">Save</button>
-  </div>
+<div id="message"></div>
+<div id="timestamp"></div>
 
-  <script>
-    // Your Firebase Configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyDz-SNVEJI-grCYJcpaHQ4aIDIwIWaeBt8",
-      authDomain: "mynotes-24988.firebaseapp.com",
-      databaseURL: "https://mynotes-24988-default-rtdb.firebaseio.com",
-      projectId: "mynotes-24988",
-      storageBucket: "mynotes-24988.appspot.com",
-      messagingSenderId: "599177137893",
-      appId: "1:599177137893:web:8eac4ceb0869ebcca4ce0c"
-    };
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDz-SNVEJI-grCYJcpaHQ4aIDIwIWaeBt8",
+    authDomain: "mynotes-24988.firebaseapp.com",
+    databaseURL: "https://mynotes-24988-default-rtdb.firebaseio.com",
+    projectId: "mynotes-24988",
+    storageBucket: "mynotes-24988.appspot.com",
+    messagingSenderId: "599177137893",
+    appId: "1:599177137893:web:8eac4ceb0869ebcca4ce0c"
+  };
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const noteRef = db.ref("note");
 
-    const noteEl = document.getElementById('note');
-    const editBtn = document.getElementById('editBtn');
-    const saveBtn = document.getElementById('saveBtn');
+  const note = document.getElementById("note");
+  const editBtn = document.getElementById("editBtn");
+  const saveBtn = document.getElementById("saveBtn");
+  const copyBtn = document.getElementById("copyBtn");
+  const message = document.getElementById("message");
+  const timestamp = document.getElementById("timestamp");
 
-    // Fetch note initially
-    function fetchNote() {
-      db.ref('note').once('value').then(snapshot => {
-        noteEl.value = snapshot.val() || "";
-      });
-    }
+  // Load note on page load
+  noteRef.on("value", snapshot => {
+    note.value = snapshot.val()?.text || "";
+    timestamp.innerText = snapshot.val()?.updatedAt ? `Last Updated: ${snapshot.val().updatedAt}` : "";
+  });
 
-    fetchNote();
+  editBtn.onclick = () => {
+    note.removeAttribute("readonly");
+    saveBtn.style.display = "inline-block";
+    editBtn.style.display = "none";
+  };
 
-    // Edit button
-    editBtn.onclick = () => {
-      noteEl.removeAttribute('readonly');
-      editBtn.style.display = 'none';
-      saveBtn.style.display = 'inline-block';
-    };
+  saveBtn.onclick = () => {
+    const now = new Date();
+    const formatted = now.toLocaleString('en-GB', { hour12: true });
 
-    // Save button
-    saveBtn.onclick = () => {
-      const updatedNote = noteEl.value.trim();
-      db.ref('note').set(updatedNote).then(() => {
-        alert('Note updated successfully!');
-        noteEl.setAttribute('readonly', true);
-        editBtn.style.display = 'inline-block';
-        saveBtn.style.display = 'none';
-      }).catch(err => {
-        alert('Error saving note: ' + err);
-      });
-    };
-  </script>
+    noteRef.set({
+      text: note.value,
+      updatedAt: formatted
+    }).then(() => {
+      note.setAttribute("readonly", true);
+      saveBtn.style.display = "none";
+      editBtn.style.display = "inline-block";
+      message.innerText = "✔️ Saved successfully!";
+      setTimeout(() => message.innerText = "", 3000);
+    });
+  };
+
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(note.value);
+    message.innerText = "🔗 Copied to clipboard!";
+    setTimeout(() => message.innerText = "", 3000);
+  };
+</script>
 
 </body>
 </html>
